@@ -8,7 +8,7 @@ from typing import Dict, Iterator, List, Optional
 import deserialize
 import requests
 
-import libhockey
+import libhockey.constants
 from libhockey.derived_client import HockeyDerivedClient
 
 
@@ -187,7 +187,7 @@ class HockeyVersionsClient(HockeyDerivedClient):
 
         self.log.info(f"Getting recent versions of app with id: {app_id}")
 
-        request_url = f"{libhockey.API_BASE_URL}/{app_id}?format=json"
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}?format=json"
         request_headers = {"X-HockeyAppToken": self.token}
         response = requests.get(request_url, headers=request_headers)
 
@@ -214,7 +214,7 @@ class HockeyVersionsClient(HockeyDerivedClient):
         :raises Exception: If we don't get the app versions
         """
 
-        request_url = f"{libhockey.API_BASE_URL}/{app_id}/app_versions?page={page}"
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions?page={page}"
         request_headers = {"X-HockeyAppToken": self.token}
 
         self.log.info(f"Fetching page {page} of app versions")
@@ -296,7 +296,7 @@ class HockeyVersionsClient(HockeyDerivedClient):
         :raises Exception: If we don't get the statistics
         """
 
-        request_url = f"{libhockey.API_BASE_URL}/{app_id}/statistics"
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/statistics"
         request_headers = {"X-HockeyAppToken": self.token}
         response = requests.get(request_url, headers=request_headers)
 
@@ -346,7 +346,7 @@ class HockeyVersionsClient(HockeyDerivedClient):
         with open(ipa_path, "rb") as ipa_file:
             with open(dsym_path, "rb") as dsym_file:
                 # Build request
-                request_url = f"{libhockey.API_BASE_URL}/upload"
+                request_url = f"{libhockey.constants.API_BASE_URL}/upload"
 
                 request_headers = {"X-HockeyAppToken": self.token}
 
