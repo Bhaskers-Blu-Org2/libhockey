@@ -26,10 +26,14 @@ class HockeyClient:
     versions: HockeyVersionsClient
     crashes: HockeyCrashesClient
 
-    def __init__(self, *, access_token: str) -> None:
+    def __init__(self, *, access_token: str, parent_logger: Optional[logging.Logger] = None) -> None:
         """Initialize the HockeyAppClient with the application id and the token."""
 
-        self.log = logging.getLogger("libhockey")
+        if parent_logger is None:
+            self.log = logging.getLogger("libhockey")
+        else:
+            self.log = parent_logger.getChild("libhockey")
+
         self.token = access_token
         self.crashes = HockeyCrashesClient(self.token, self.log)
         self.versions = HockeyVersionsClient(self.token, self.log)
