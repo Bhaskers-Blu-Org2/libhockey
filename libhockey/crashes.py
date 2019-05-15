@@ -5,7 +5,7 @@ from typing import Iterator, List, Optional
 
 import deserialize
 
-import libhockey
+import libhockey.constants
 from libhockey.derived_client import HockeyDerivedClient
 
 
@@ -163,7 +163,7 @@ class HockeyCrashesClient(HockeyDerivedClient):
         :rtype: HockeyCrashGroup
         """
 
-        request_url = f"{libhockey.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/" + \
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/" + \
             f"crash_reasons?per_page=100&order=desc&page={page}"
 
         self.log.info(f"Fetching page {page} of crash groups")
@@ -218,7 +218,7 @@ class HockeyCrashesClient(HockeyDerivedClient):
         :rtype: HockeyCrashInstance
         """
 
-        request_url = f"{libhockey.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/crash_reasons/" + \
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/crash_reasons/" + \
             f"{crash_group_id}?per_page=100&order=desc&page={page}"
         response = self.get(request_url, retry_count=3)
 
