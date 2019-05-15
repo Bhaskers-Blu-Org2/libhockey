@@ -17,6 +17,7 @@ eggs/
 lib/
 lib64/
 parts/
+pip-wheel-metadata/
 sdist/
 var/
 wheels/
@@ -89,6 +90,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+bin/
+pyvenv.cfg
 
 # Spyder project settings
 .spyderproject
@@ -102,3 +105,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# macOS
+.DS_Store
