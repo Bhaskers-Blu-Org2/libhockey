@@ -1,5 +1,8 @@
 """Hockey versions API wrappers."""
 
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import enum
 import logging
 import re
