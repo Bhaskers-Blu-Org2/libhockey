@@ -1,5 +1,8 @@
 """Hockey versions API wrappers."""
 
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import enum
 import logging
 import re
@@ -158,13 +161,6 @@ class HockeyUploadReleaseType(enum.Enum):
     ENTERPRISE = 3
 
 
-class HockeyUploadRestrictionType(enum.Enum):
-    """Hockey restriction types."""
-
-    RESTRICTED = "7132"
-    UNRESTRICTED = ""
-
-
 class HockeyVersionsClient(HockeyDerivedClient):
     """Wrapper around the Hockey versions APIs.
 
@@ -317,8 +313,10 @@ class HockeyVersionsClient(HockeyDerivedClient):
         dsym_path: str,
         notes: str,
         release_type: HockeyUploadReleaseType,
-        restriction_type: HockeyUploadRestrictionType,
         commit_sha: str,
+        *,
+        teams: Optional[List[str]] = None,
+        users: Optional[List[str]] = None,
     ) -> str:
         """Upload a new version of an app to Hockey.
 
@@ -326,8 +324,9 @@ class HockeyVersionsClient(HockeyDerivedClient):
         :param dsym_path: The path to the directory continaing the dSYM bundles
         :param notes: The release notes in Markdown format
         :param release_type: The type of release this is
-        :param restriction_type: Whether this build should be restricted or not
         :param commit_sha: The commit that resulted in this build
+        :param Optional[List[str]] teams: An optional list of team IDs to restrict the build to
+        :param Optional[List[str]] users: An optional list of user IDs to restrict the build to
 
         :returns: The URL to the build on Hockey
 
@@ -360,12 +359,17 @@ class HockeyVersionsClient(HockeyDerivedClient):
                     "notes_type": HockeyVersionNotesType.MARKDOWN.value,
                     "notify": HockeyUploadNotificationType.DONT_NOTIFY.value,
                     "status": HockeyUploadDownloadStatus.AVAILABLE.value,
-                    "teams": restriction_type.value,
                     "mandatory": HockeyUploadMandatory.NO.value,
                     "release_type": release_type.value,
                     "commit_sha": commit_sha,
                     "retention_days": 28,
                 }
+
+                if teams:
+                    request_body["teams"] = ",".join(teams)
+
+                if users:
+                    request_body["users"] = ",".join(users)
 
                 self.log.info("Hockey request: " + str(request_body))
 
