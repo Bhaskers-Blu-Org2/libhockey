@@ -160,6 +160,13 @@ class HockeyUploadReleaseType(enum.Enum):
     STORE = 1
     ENTERPRISE = 3
 
+class HockeyRetentionDays(enum.Enum):
+    """Hockey retention days."""
+
+    TWENTY_EIGHT = 28
+    NINETY = 90
+    UNLIMITED = "unlimited"
+
 
 class HockeyVersionsClient(HockeyDerivedClient):
     """Wrapper around the Hockey versions APIs.
@@ -315,6 +322,11 @@ class HockeyVersionsClient(HockeyDerivedClient):
         release_type: HockeyUploadReleaseType,
         commit_sha: str,
         *,
+        status: HockeyUploadDownloadStatus = HockeyUploadDownloadStatus.AVAILABLE,
+        notification_state: HockeyUploadNotificationType = HockeyUploadNotificationType.DONT_NOTIFY,
+        is_mandatory: bool = False,
+        notes_type: HockeyVersionNotesType = HockeyVersionNotesType.MARKDOWN,
+        retention_days: HockeyRetentionDays = HockeyRetentionDays.TWENTY_EIGHT,
         teams: Optional[List[str]] = None,
         users: Optional[List[str]] = None,
     ) -> str:
@@ -325,6 +337,11 @@ class HockeyVersionsClient(HockeyDerivedClient):
         :param notes: The release notes in Markdown format
         :param release_type: The type of release this is
         :param commit_sha: The commit that resulted in this build
+        :param HockeyUploadDownloadStatus status: The download status of the build
+        :param HockeyUploadNotificationType notification_state: Set who should be notified about the build
+        :param bool is_mandatory: Set to True if the update is mandatory
+        :param HockeyVersionNotesType notes_type: Set the type of notes
+        :param int retention_days: Number of days to retain the build for ()
         :param Optional[List[str]] teams: An optional list of team IDs to restrict the build to
         :param Optional[List[str]] users: An optional list of user IDs to restrict the build to
 
@@ -356,13 +373,13 @@ class HockeyVersionsClient(HockeyDerivedClient):
 
                 request_body = {
                     "notes": notes,
-                    "notes_type": HockeyVersionNotesType.MARKDOWN.value,
-                    "notify": HockeyUploadNotificationType.DONT_NOTIFY.value,
-                    "status": HockeyUploadDownloadStatus.AVAILABLE.value,
-                    "mandatory": HockeyUploadMandatory.NO.value,
+                    "notes_type": notes_type.value,
+                    "notify": notification_state.value,
+                    "status": status.value,
+                    "mandatory": 1 if is_mandatory else 0,
                     "release_type": release_type.value,
                     "commit_sha": commit_sha,
-                    "retention_days": 28,
+                    "retention_days": retention_days.value,
                 }
 
                 if teams:
