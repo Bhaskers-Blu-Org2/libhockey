@@ -6,7 +6,7 @@
 import enum
 import logging
 import re
-from typing import Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 import deserialize
 import requests
@@ -429,3 +429,113 @@ class HockeyVersionsClient(HockeyDerivedClient):
         return f"{upload_response.public_url}/app_versions/{version}"
 
         # pylint: enable=too-many-locals
+
+
+    def update(
+        self,
+        version_id: str,
+        app_id: str,
+        *,
+        ipa_path: Optional[str],
+        dsym_path: Optional[str],
+        notes: Optional[str],
+        status: Optional[HockeyUploadDownloadStatus] = None,
+        notification_state: Optional[HockeyUploadNotificationType],
+        is_mandatory: Optional[bool] = None,
+        notes_type: Optional[HockeyVersionNotesType] = None,
+        teams: Optional[List[str]] = None,
+        users: Optional[List[str]] = None,
+    ) -> None:
+        """Update a new version of an app on Hockey.
+
+        :param version_id: The ID of the version to update
+        :param app_id: The ID of the app to update
+        :param Optional[str] ipa_path: The path to the .ipa file to upload
+        :param Optional[str] dsym_path: The path to the directory continaing the dSYM bundles
+        :param Optional[str] notes: The release notes in Markdown format
+        :param Optional[HockeyUploadDownloadStatus] status: The download status of the build
+        :param Optional[HockeyUploadNotificationType] notification_state: Set who should be notifiedabout the build
+        :param Optional[bool] is_mandatory: Set to True if the update is mandatory
+        :param Optional[HockeyVersionNotesType] notes_type: Set the type of notes
+        :param Optional[List[str]] teams: An optional list of team IDs to restrict the build to
+        :param Optional[List[str]] users: An optional list of user IDs to restrict the build to
+
+        :raises Exception: If we fail to update the build
+        """
+
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
+
+        if notification_state == HockeyUploadNotificationType.NOTIFY_ALL:
+            raise Exception("Cannot specify notify all for update")
+
+        request_files = {}
+
+        if ipa_path is not None:
+            ipa_file_name = ipa_path.split("/")[-1]
+            self.log.info("IPA Name: " + ipa_file_name)
+            ipa_file = open(ipa_path, "rb")
+            request_files["ipa"] = (ipa_file_name, ipa_file)
+
+        if dsym_path is not None:
+            dsym_file_name = dsym_path.split("/")[-1]
+            self.log.info("dSYM Name: " + dsym_file_name)
+            dsym_file = open(dsym_path, "rb")
+            request_files["dsym"] = (dsym_file_name, dsym_file)
+
+
+        # Build request
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{version_id}"
+
+        request_headers = {"X-HockeyAppToken": self.token}
+
+        request_body: Dict[str, Any] = {}
+
+        if notes:
+            request_body["notes"] = notes
+
+        if notes_type:
+            request_body["notes_type"] = notes_type.value
+
+        if notification_state:
+            request_body["notify"] = notification_state.value
+
+        if status:
+            request_body["status"] = status.value
+
+        if is_mandatory:
+            request_body["mandatory"] = 1 if is_mandatory else 0
+
+        if teams:
+            request_body["teams"] = ",".join(teams)
+
+        if users:
+            request_body["users"] = ",".join(users)
+
+        self.log.info("Hockey request: " + str(request_body))
+
+        # Perform request
+        response = requests.put(
+            request_url,
+            headers=request_headers,
+            files=request_files,
+            data=request_body,
+            timeout=20 * 60,
+        )
+
+        if ipa_file is not None:
+            ipa_file.close()
+
+        if dsym_file is not None:
+            dsym_file.close()
+
+        if response.status_code == 401:
+            raise Exception("Invalid Hockeyapp token")
+
+        if response.status_code != 201:
+            raise Exception(
+                f"Unsuccessful response status code: {response.status_code} -> {response.text.encode('utf-8')}"
+            )
+
+        # pylint: enable=too-many-locals
+        # pylint: enable=too-many-branches
