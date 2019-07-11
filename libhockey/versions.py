@@ -535,7 +535,7 @@ class HockeyVersionsClient(HockeyDerivedClient):
         if response.status_code == 401:
             raise Exception("Invalid Hockeyapp token")
 
-        if response.status_code != 201:
+        if response.status_code < 200 or response.status_code >= 300:
             raise Exception(
                 f"Unsuccessful response status code: {response.status_code} -> {response.text.encode('utf-8')}"
             )
