@@ -436,11 +436,11 @@ class HockeyVersionsClient(HockeyDerivedClient):
         version_id: str,
         app_id: str,
         *,
-        ipa_path: Optional[str],
-        dsym_path: Optional[str],
-        notes: Optional[str],
+        ipa_path: Optional[str] = None,
+        dsym_path: Optional[str] = None,
+        notes: Optional[str] = None,
         status: Optional[HockeyUploadDownloadStatus] = None,
-        notification_state: Optional[HockeyUploadNotificationType],
+        notification_state: Optional[HockeyUploadNotificationType] = None,
         is_mandatory: Optional[bool] = None,
         notes_type: Optional[HockeyVersionNotesType] = None,
         teams: Optional[List[str]] = None,
@@ -470,6 +470,9 @@ class HockeyVersionsClient(HockeyDerivedClient):
             raise Exception("Cannot specify notify all for update")
 
         request_files = {}
+
+        ipa_file = None
+        dsym_file = None
 
         if ipa_path is not None:
             ipa_file_name = ipa_path.split("/")[-1]
