@@ -317,11 +317,11 @@ class HockeyVersionsClient(HockeyDerivedClient):
     def upload(
         self,
         ipa_path: str,
-        dsym_path: str,
         notes: str,
-        release_type: HockeyUploadReleaseType,
-        commit_sha: str,
         *,
+        release_type: HockeyUploadReleaseType = HockeyUploadReleaseType.ENTERPRISE,
+        dsym_path: Optional[str] = None,
+        commit_sha: Optional[str] = None,
         status: HockeyUploadDownloadStatus = HockeyUploadDownloadStatus.AVAILABLE,
         notification_state: HockeyUploadNotificationType = HockeyUploadNotificationType.DONT_NOTIFY,
         is_mandatory: bool = False,
@@ -333,10 +333,10 @@ class HockeyVersionsClient(HockeyDerivedClient):
         """Upload a new version of an app to Hockey.
 
         :param ipa_path: The path to the .ipa file to upload
-        :param dsym_path: The path to the directory continaing the dSYM bundles
         :param notes: The release notes in Markdown format
-        :param release_type: The type of release this is
-        :param commit_sha: The commit that resulted in this build
+        :param HockeyUploadReleaseType release_type: The type of release this is
+        :param Optional[str] dsym_path: The path to the directory continaing the dSYM bundles
+        :param Optional[str] commit_sha: The commit that resulted in this build
         :param HockeyUploadDownloadStatus status: The download status of the build
         :param HockeyUploadNotificationType notification_state: Set who should be notified about the build
         :param bool is_mandatory: Set to True if the update is mandatory
@@ -354,50 +354,61 @@ class HockeyVersionsClient(HockeyDerivedClient):
         # pylint: disable=too-many-locals
 
         ipa_file_name = ipa_path.split("/")[-1]
-        dsym_file_name = dsym_path.split("/")[-1]
-
         self.log.info("IPA Name: " + ipa_file_name)
-        self.log.info("dSYM Name: " + dsym_file_name)
+        ipa_file = open(ipa_path, "rb")
 
-        with open(ipa_path, "rb") as ipa_file:
-            with open(dsym_path, "rb") as dsym_file:
-                # Build request
-                request_url = f"{libhockey.constants.API_BASE_URL}/upload"
+        request_files = {
+            "ipa": (ipa_file_name, ipa_file)
+        }
 
-                request_headers = {"X-HockeyAppToken": self.token}
+        dsym_file = None
 
-                request_files = {
-                    "ipa": (ipa_file_name, ipa_file),
-                    "dsym": (dsym_file_name, dsym_file),
-                }
+        if dsym_path is not None:
+            dsym_file_name = dsym_path.split("/")[-1]
+            self.log.info("dSYM Name: " + dsym_file_name)
+            dsym_file = open(dsym_path, "rb")
+            request_files["dsym"] = (dsym_file_name, dsym_file)
 
-                request_body = {
-                    "notes": notes,
-                    "notes_type": notes_type.value,
-                    "notify": notification_state.value,
-                    "status": status.value,
-                    "mandatory": 1 if is_mandatory else 0,
-                    "release_type": release_type.value,
-                    "commit_sha": commit_sha,
-                    "retention_days": retention_days.value,
-                }
+        # Build request
+        request_url = f"{libhockey.constants.API_BASE_URL}/upload"
 
-                if teams:
-                    request_body["teams"] = ",".join(teams)
+        request_headers = {"X-HockeyAppToken": self.token}
 
-                if users:
-                    request_body["users"] = ",".join(users)
+        request_body = {
+            "notes": notes,
+            "notes_type": notes_type.value,
+            "notify": notification_state.value,
+            "status": status.value,
+            "mandatory": 1 if is_mandatory else 0,
+            "release_type": release_type.value,
+            "retention_days": retention_days.value,
+        }
 
-                self.log.info("Hockey request: " + str(request_body))
+        if commit_sha:
+            request_body["commit_sha"] = commit_sha
 
-                # Perform request
-                response = requests.post(
-                    request_url,
-                    headers=request_headers,
-                    files=request_files,
-                    data=request_body,
-                    timeout=20 * 60,
-                )
+        if teams:
+            request_body["teams"] = ",".join(teams)
+
+        if users:
+            request_body["users"] = ",".join(users)
+
+        self.log.info("Hockey request: " + str(request_body))
+
+        # Perform request
+        response = requests.post(
+            request_url,
+            headers=request_headers,
+            files=request_files,
+            data=request_body,
+            timeout=20 * 60,
+        )
+
+        if ipa_file is not None:
+            ipa_file.close()
+
+        if dsym_file is not None:
+            dsym_file.close()
 
         if response.status_code == 401:
             raise Exception("Invalid Hockeyapp token")
