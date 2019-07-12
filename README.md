@@ -37,14 +37,9 @@ download_link = client.versions.upload("/path/to/app.ipa", "Release notes go her
 
 ```python
 
-current_crashes = client.crashes.groups_for_version("[app id]", "[version id]")
-previous_crashes = client.crashes.groups_for_version("[app id]", "[version id]")
-
-current_crashes.sort(key=lambda crash: crash.number_of_crashes, reverse=True)
-previous_crashes.sort(key=lambda crash: crash.number_of_crashes, reverse=True)
-
+current_crashes = client.crashes.groups_for_version("[app id]", "[current version id]")
+previous_crashes = client.crashes.groups_for_version("[app id]", "[previous version id]")
 new_crashes = list(set(current_crashes) - set(previous_crashes))
-new_crashes.sort(key=lambda crash: crash.number_of_crashes, reverse=True)
 
 for crash in new_crashes:
     print(f"({crash.number_of_crashes}) {crash.crash_file} - {crash.crash_class}:{crash.crash_method}")
