@@ -217,30 +217,33 @@ class HockeyVersionsClient(HockeyDerivedClient):
         :raises Exception: If we don't get the app versions
         """
 
-        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions?page={page}"
-        request_headers = {"X-HockeyAppToken": self.token}
+        while True:
+            request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions?page={page}"
+            request_headers = {"X-HockeyAppToken": self.token}
 
-        self.log.info(f"Fetching page {page} of app versions")
-        response = requests.get(request_url, headers=request_headers)
+            self.log.info(f"Fetching page {page} of app versions")
+            response = requests.get(request_url, headers=request_headers)
 
-        if response.status_code != 200:
-            raise Exception(
-                f"Failed to get app versions: {response.status_code} -> {response.text}"
+            if response.status_code != 200:
+                raise Exception(
+                    f"Failed to get app versions: {response.status_code} -> {response.text}"
+                )
+
+            response_data: HockeyAppVersionsResponse = deserialize.deserialize(
+                HockeyAppVersionsResponse, response.json()
             )
 
-        response_data: HockeyAppVersionsResponse = deserialize.deserialize(
-            HockeyAppVersionsResponse, response.json()
-        )
+            self.log.info(f"Fetched page {page}/{response_data.total_pages} of app versions")
 
-        self.log.info(f"Fetched page {page}/{response_data.total_pages} of app versions")
+            versions: List[HockeyAppVersion] = response_data.app_versions
 
-        versions: List[HockeyAppVersion] = response_data.app_versions
+            for version in versions:
+                yield version
 
-        for version in versions:
-            yield version
+            if response_data.total_pages <= page:
+                break
 
-        if response_data.total_pages > page:
-            yield from self.generate_all(app_id, page=page + 1)
+            page = page + 1
 
     def all(self, app_id: str) -> List[HockeyAppVersion]:
         """Get all app versions for the app ID.
