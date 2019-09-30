@@ -5,6 +5,7 @@
 
 import logging
 from typing import Iterator, List, Optional
+import urllib.parse
 
 import deserialize
 
@@ -152,7 +153,13 @@ class HockeyCrashesClient(HockeyDerivedClient):
         super().__init__("crashes", token, parent_logger)
 
     def generate_groups_for_version(
-        self, app_id: str, app_version_id: int, *, page: int = 1
+        self,
+        app_id: str,
+        app_version_id: int,
+        *,
+        page: int = 1,
+        symbolicated_only: Optional[bool] = None,
+        sort_field: Optional[str] = None
     ) -> Iterator[HockeyCrashGroup]:
         """Get all crash groups for a given hockeyApp version.
 
@@ -161,13 +168,28 @@ class HockeyCrashesClient(HockeyDerivedClient):
         :param app_id: The ID of the app
         :param app_version_id: The version ID for the app
         :param int page: The page of crash groups to get
+        :param Optional[bool] symbolicated_only: Set to True to only get symbolicated crashes
+        :param Optional[str] sort_field: The field to sort by
 
         :returns: The list of crash groups that were found
         :rtype: HockeyCrashGroup
         """
 
-        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/" + \
-            f"crash_reasons?per_page=100&order=desc&page={page}"
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/crash_reasons"
+
+        parameters = {
+            "per_page": 100,
+            "order": "desc",
+            "page": page,
+        }
+
+        if symbolicated_only:
+            parameters["symbolicated"] = 1 if symbolicated_only else 0
+
+        if sort_field:
+            parameters["sort"] = sort_field
+
+        request_url += urllib.parse.urlencode(parameters)
 
         self.log.info(f"Fetching page {page} of crash groups")
 
@@ -183,23 +205,41 @@ class HockeyCrashesClient(HockeyDerivedClient):
             yield reason
 
         if crash_reasons_response.total_pages > page:
-            yield from self.generate_groups_for_version(app_id, app_version_id, page=page + 1)
+            yield from self.generate_groups_for_version(
+                app_id,
+                app_version_id,
+                page=page + 1,
+                symbolicated_only=symbolicated_only,
+                sort_field=sort_field
+            )
 
     def groups_for_version(
-        self, app_id: str, app_version_id: int, max_count: Optional[int] = None
+        self,
+        app_id: str,
+        app_version_id: int,
+        max_count: Optional[int] = None,
+        symbolicated_only: Optional[bool] = None,
+        sort_field: Optional[str] = None
     ) -> List[HockeyCrashGroup]:
         """Get all crash groups for a given hockeyApp version.
 
         :param app_id: The ID of the app
         :param app_version_id: The version ID for the app
         :param max_count: The maximum count of crash groups to fetch before stopping
+        :param Optional[bool] symbolicated_only: Set to True to only get symbolicated crashes
+        :param Optional[str] sort_field: The field to sort by
 
         :returns: The list of crash groups that were found
         """
 
         groups = []
 
-        for group in self.generate_groups_for_version(app_id, app_version_id):
+        for group in self.generate_groups_for_version(
+            app_id,
+            app_version_id,
+            symbolicated_only=symbolicated_only,
+            sort_field=sort_field
+        ):
             groups.append(group)
 
             if max_count is not None and len(groups) >= max_count:
