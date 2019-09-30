@@ -288,3 +288,16 @@ class HockeyCrashesClient(HockeyDerivedClient):
         """
 
         return list(self.generate_in_group(app_id, app_version_id, crash_group_id))
+
+    def get_log(self, app_id: str, crash_id: int) -> str:
+        """Get the log from a crash
+
+        :param app_id: The ID of the app
+        :param crash_id: The ID of the crash
+
+        :returns: The log from the crash
+        """
+
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/crashes/{crash_id}?format=log"
+        response = self.get(request_url, retry_count=3)
+        return response.text
