@@ -175,7 +175,7 @@ class HockeyCrashesClient(HockeyDerivedClient):
         :rtype: HockeyCrashGroup
         """
 
-        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/crash_reasons"
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/crash_reasons?"
 
         parameters = {
             "per_page": 100,
