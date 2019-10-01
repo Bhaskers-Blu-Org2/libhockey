@@ -5,6 +5,7 @@
 
 import logging
 import time
+from typing import Any
 
 import requests
 
@@ -30,7 +31,7 @@ class HockeyDerivedClient:
         :param url: The URL to run the GET on
         :param int retry_count: The number of retries remaining if we got a 202 last time
 
-        :returns: The raw JSON response
+        :returns: The raw response
 
         :raises Exception: If the request fails with a non 200 status code
         """
@@ -44,6 +45,23 @@ class HockeyDerivedClient:
             return self.get(url, retry_count=retry_count - 1)
 
         if response.status_code != 200:
+            raise Exception(f"HockeyApp request failed: {url} Error: {response.text}")
+
+        return response
+
+    def post(self, url: str, *, data: Any) -> requests.Response:
+        """Perform a POST request to a url
+
+        :param url: The URL to run the GET on
+        :param Any data: The JSON serializable data to send
+
+        :returns: The raw response
+
+        :raises Exception: If the request fails with a non 200 status code
+        """
+        response = requests.post(url, headers={"X-HockeyAppToken": self.token}, json=data)
+
+        if response.status_code < 200 or response.status_code >= 300:
             raise Exception(f"HockeyApp request failed: {url} Error: {response.text}")
 
         return response
