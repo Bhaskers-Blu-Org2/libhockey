@@ -265,21 +265,24 @@ class HockeyCrashesClient(HockeyDerivedClient):
         return groups
 
     def generate_in_group(
-        self, app_id: str, app_version_id: int, crash_group_id: int, *, page: int = 1
+        self, app_id: str, crash_group_id: int, *, app_version_id: Optional[int], page: int = 1
     ) -> Iterator[HockeyCrashInstance]:
         """Get all crash instances in a group.
 
         :param app_id: The ID of the app
-        :param app_version_id: The version ID for the app
         :param crash_group_id: The ID of the group to get the crashes
+        :param Optional[int] app_version_id: The version ID for the app
         :param int page: The page of crashes to start at
 
         :returns: The crashes that were found in the group
-        :rtype: HockeyCrashInstance
         """
 
-        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/app_versions/{app_version_id}/crash_reasons/" + \
-            f"{crash_group_id}?per_page=100&order=desc&page={page}"
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/"
+
+        if app_version_id is not None:
+            request_url += f"app_versions/{app_version_id}/"
+
+        request_url += f"crash_reasons/{crash_group_id}?per_page=100&order=desc&page={page}"
         response = self.get(request_url, retry_count=3)
 
         crashes_response = deserialize.deserialize(HockeyCrashesResponse, response.json())
@@ -290,7 +293,7 @@ class HockeyCrashesClient(HockeyDerivedClient):
             yield crash
 
         if crashes_response.total_pages > page:
-            yield from self.generate_in_group(app_id, app_version_id, crash_group_id, page=page + 1)
+            yield from self.generate_in_group(app_id, crash_group_id, app_version_id=app_version_id, page=page + 1)
 
     def in_group(
         self, app_id: str, app_version_id: int, crash_group_id: int
@@ -304,7 +307,7 @@ class HockeyCrashesClient(HockeyDerivedClient):
         :returns: The list of crash instances that were found
         """
 
-        return list(self.generate_in_group(app_id, app_version_id, crash_group_id))
+        return list(self.generate_in_group(app_id, crash_group_id, app_version_id=app_version_id))
 
     def get_log(self, app_id: str, crash_id: int) -> str:
         """Get the log from a crash
