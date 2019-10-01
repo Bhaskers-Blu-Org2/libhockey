@@ -319,6 +319,19 @@ class HockeyCrashesClient(HockeyDerivedClient):
         response = self.get(request_url, retry_count=3)
         return response.text
 
+    def get_description(self, app_id: str, crash_id: int) -> str:
+        """Get the description from a crash
+
+        :param app_id: The ID of the app
+        :param crash_id: The ID of the crash
+
+        :returns: The description from the crash
+        """
+
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/crashes/{crash_id}?format=text"
+        response = self.get(request_url, retry_count=3)
+        return response.text
+
     def get_annotation(self, app_id: str, group_id: int) -> Optional[HockeyCrashAnnotation]:
         """Get the annotation from a crash
 
