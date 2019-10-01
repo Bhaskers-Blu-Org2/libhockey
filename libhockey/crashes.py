@@ -142,6 +142,23 @@ class HockeyCrashesResponse:
     total_pages: int
 
 
+@deserialize.key("identifier", "id")
+class HockeyCrashAnnotation:
+    """Represents a Hockey crash annotation."""
+
+    identifier: int
+    crash_reason_id: int
+    text: str
+    created_at: str
+    updated_at: str
+
+class HockeyCrashAnnotationResponse:
+    """Represents Hockey annotation response."""
+
+    status: str
+    crash_annotations: Optional[List[HockeyCrashAnnotation]]
+
+
 class HockeyCrashesClient(HockeyDerivedClient):
     """Wrapper around the Hockey crashes APIs.
 
@@ -301,3 +318,41 @@ class HockeyCrashesClient(HockeyDerivedClient):
         request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/crashes/{crash_id}?format=log"
         response = self.get(request_url, retry_count=3)
         return response.text
+
+    def get_annotation(self, app_id: str, group_id: int) -> Optional[HockeyCrashAnnotation]:
+        """Get the annotation from a crash
+
+        :param app_id: The ID of the app
+        :param group_id: The ID of the crash group
+
+        :raises Exception: If we get a failure status back
+
+        :returns: The annotation on the crash if found, None otherwise
+        """
+
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/crash_reasons/{group_id}/crash_annotations"
+        response = self.get(request_url, retry_count=3)
+        parsed_response = deserialize.deserialize(HockeyCrashAnnotationResponse, response.json())
+
+        if parsed_response.status not in ["success", "empty"]:
+            raise Exception(f"Failed to get annotations: {response.text}")
+
+        if parsed_response.crash_annotations is None:
+            return None
+
+        if len(parsed_response.crash_annotations) == 0:
+            return None
+
+        return parsed_response.crash_annotations[0]
+
+    def set_annotation(self, app_id: str, group_id: int, text: str) -> None:
+        """Set the annotation on a crash
+
+        :param app_id: The ID of the app
+        :param group_id: The ID of the crash group
+        :param text: The text to set
+        """
+
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/crash_reasons/{group_id}/crash_annotations?"
+        request_url += urllib.parse.urlencode({"text": text})
+        self.post(request_url, data={})
