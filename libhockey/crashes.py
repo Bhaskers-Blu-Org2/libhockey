@@ -169,6 +169,24 @@ class HockeyCrashesClient(HockeyDerivedClient):
     def __init__(self, token: str, parent_logger: logging.Logger) -> None:
         super().__init__("crashes", token, parent_logger)
 
+    def group(
+        self, app_id: str, crash_group_id: int
+    ) -> HockeyCrashGroup:
+        """Get a crash group.
+
+        :param app_id: The ID of the app
+        :param crash_group_id: The ID of the group to get
+
+        :returns: The crash group
+        """
+
+        request_url = f"{libhockey.constants.API_BASE_URL}/{app_id}/crash_reasons/{crash_group_id}"
+        response = self.get(request_url, retry_count=3)
+
+        crashes_response = deserialize.deserialize(HockeyCrashesResponse, response.json())
+
+        return crashes_response.crash_reason
+
     def generate_groups_for_version(
         self,
         app_id: str,
