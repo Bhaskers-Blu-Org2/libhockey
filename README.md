@@ -1,7 +1,13 @@
+# This project has been deprecated
+Due to the immenent switch from Hockey to App Center, this project has been deprecated. Minor updates may still be made, but these should not be counted on in any way. No pull requests will be accepted at this point. Any issues are unlikely to be addressed.
+
+
 # libhockey
 
 [![PyPi Version](https://img.shields.io/pypi/v/libhockey.svg)](https://pypi.org/project/libhockey/)
 [![License](https://img.shields.io/pypi/l/libhockey.svg)](https://github.com/Microsoft/libhockey/blob/master/LICENSE)
+
+
 
 `libhockey` is a wrapper around the Hockey App REST API. It's aim is to be a simple and easy to use as possible.
 
