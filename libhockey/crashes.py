@@ -4,7 +4,7 @@
 # Licensed under the MIT license.
 
 import logging
-from typing import Iterator, List, Optional
+from typing import Any, Iterator, List, Optional
 import urllib.parse
 
 import deserialize
@@ -41,6 +41,15 @@ class HockeyCrashGroup:
     crash_file: Optional[str]
     crash_class: Optional[str]
     crash_line: Optional[str]
+
+    def __getattr__(self, name: str) -> Any:
+        """Override to keep mypy happy.
+
+        :param name: The name of the attribute
+
+        :raises AttributeError: Always since this shouldn't be called
+        """
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
     def url(self) -> str:
         """Return the access URL for the crash.
