@@ -120,8 +120,8 @@ class HockeyCrashInstance:
     oem: str
     model: str
     os_version: str
-    jail_break: bool
-    contact_string: str
+    jail_break: Optional[bool]
+    contact_string: Optional[str]
     user_string: str
     has_log: bool
     has_description: bool
