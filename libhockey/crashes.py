@@ -126,12 +126,12 @@ class HockeyCrashInstance:
     crash_reason_id: int
     created_at: str
     updated_at: str
-    oem: str
-    model: str
-    os_version: str
+    oem: Optional[str]
+    model: Optional[str]
+    os_version: Optional[str]
     jail_break: Optional[bool]
     contact_string: Optional[str]
-    user_string: str
+    user_string: Optional[str]
     has_log: bool
     has_description: bool
     app_version_id: int
