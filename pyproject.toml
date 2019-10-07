@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "libhockey"
-version = "0.22.0"
+version = "0.23.0"
 description = "A Python wrapper around the Hockey App API."
 
 license = "MIT"
@@ -17,7 +17,7 @@ homepage = "https://github.com/Microsoft/libhockey"
 keywords = ['hockey', 'hockeyapp', 'api']
 
 classifiers = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 7 - Inactive',
     'Intended Audience :: Developers',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.7',
@@ -27,7 +27,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
-deserialize = "^0.10.0"
+deserialize = "^1"
 requests = "^2.22.0"
 
 [tool.poetry.dev-dependencies]
